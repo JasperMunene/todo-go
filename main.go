@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -14,7 +15,6 @@ func main() {
 	}
 
 	command := args[1]
-	tasks := []string{"Walking the dog", "Cleaning", "Mowing the lawn"}
 
 	switch command {
 	case "add":
@@ -23,12 +23,33 @@ func main() {
 			return
 		}
 		task := args[2]
-		tasks = append(tasks, task)
-		fmt.Println("Adding task:", task)
+
+		f, err := os.OpenFile("tasks.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		defer f.Close()
+
+		if _, err := f.WriteString(task + "\n"); err != nil {
+			fmt.Println("Error:", err)
+		} else {
+			fmt.Println("Added task:", task)
+		}
 
 	case "list":
-		for _, task := range tasks {
-			fmt.Println(task)
+		data, err := os.ReadFile("tasks.txt")
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		tasks := strings.Split(string(data), "\n")
+
+		for i, task := range tasks {
+			if task != "" {
+				fmt.Printf("%d. %s\n", i+1, task)
+			}
 		}
 
 	default:
